@@ -2963,16 +2963,16 @@ QueryBuilder.templates.group = '\
 <div id="{{= it.group_id }}" class="rules-group-container"> \
   <div class="rules-group-header"> \
     <div class="btn-group pull-right group-actions"> \
-      <button type="button" class="btn btn-xs btn-success" data-add="rule"> \
+      <button type="button" class="btn btn-xs btn-save" data-add="rule"> \
         <i class="{{= it.icons.add_rule }}"></i> {{= it.translate("add_rule") }} \
       </button> \
       {{? it.settings.allow_groups===-1 || it.settings.allow_groups>=it.level }} \
-        <button type="button" class="btn btn-xs btn-success" data-add="group"> \
+        <button type="button" class="btn btn-xs btn-save" data-add="group"> \
           <i class="{{= it.icons.add_group }}"></i> {{= it.translate("add_group") }} \
         </button> \
       {{?}} \
       {{? it.level>1 }} \
-        <button type="button" class="btn btn-xs btn-danger" data-delete="group"> \
+        <button type="button" class="btn btn-xs btn-delete" data-delete="group"> \
           <i class="{{= it.icons.remove_group }}"></i> {{= it.translate("delete_group") }} \
         </button> \
       {{?}} \
@@ -2997,7 +2997,7 @@ QueryBuilder.templates.rule = '\
 <div id="{{= it.rule_id }}" class="rule-container"> \
   <div class="rule-header"> \
     <div class="btn-group pull-right rule-actions"> \
-      <button type="button" class="btn btn-xs btn-danger" data-delete="rule"> \
+      <button type="button" class="btn btn-xs btn-delete" data-delete="rule"> \
         <i class="{{= it.icons.remove_rule }}"></i> {{= it.translate("delete_rule") }} \
       </button> \
     </div> \
@@ -5965,6 +5965,9 @@ QueryBuilder.extend(/** @lends module:plugins.SqlSupport.prototype */ {
 
                                 value += v;
                             }
+                            if (rule.operator == 'begins_with' || rule.operator == 'not_begins_with' || rule.operator == 'contains' || rule.operator == 'not_contains' || rule.operator == 'ends_with' || rule.operator == 'not_ends_with') {
+                                value += " ESCAPE '\\'";
+                            }
                         });
                     }
 
@@ -6040,7 +6043,7 @@ QueryBuilder.extend(/** @lends module:plugins.SqlSupport.prototype */ {
     getRulesFromSQL: function(query, stmt) {
         if (!('SQLParser' in window)) {
             Utils.error('MissingLibrary', 'SQLParser is required to parse SQL queries. Get it here https://github.com/mistic100/sql-parser');
-        }
+        }        
 
         var self = this;
 
@@ -6053,7 +6056,7 @@ QueryBuilder.extend(/** @lends module:plugins.SqlSupport.prototype */ {
             var config = getStmtConfig(stmt);
             stmt = this.settings.sqlRuleStatement[config[1]](query.params, config[2]);
         }
-
+        
         if (stmt) {
             query.sql = stmt.esc(query.sql);
         }
@@ -6061,9 +6064,9 @@ QueryBuilder.extend(/** @lends module:plugins.SqlSupport.prototype */ {
         if (query.sql.toUpperCase().indexOf('SELECT') !== 0) {
             query.sql = 'SELECT * FROM table WHERE ' + query.sql;
         }
-
+        
         var parsed = SQLParser.parse(query.sql);
-
+        
         if (!parsed.where) {
             Utils.error('SQLParse', 'No WHERE clause found');
         }
